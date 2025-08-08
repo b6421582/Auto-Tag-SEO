@@ -1,0 +1,1186 @@
+/* ========== 全新标签列表区块样式 ========== */
+.atsv-list-wrap {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    margin: 0 30px 30px;
+    padding: 32px 24px 24px 24px;
+}
+.atsv-list-title {
+    text-align: center;
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    margin-bottom: 24px;
+    color: #23282d;
+}
+.atsv-list-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 24px;
+    margin-bottom: 18px;
+}
+.atsv-list-toolbar-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.atsv-list-stat {
+    font-size: 14px;
+    color: #555;
+}
+.atsv-list-select {
+    padding: 4px 12px;
+    border-radius: 6px;
+    border: 1px solid #d1d5db;
+    background: #f9fafb;
+    font-size: 14px;
+}
+.atsv-list-tab {
+    padding: 6px 18px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    background: #f3f4f6;
+    color: #555;
+    border: 1px solid #e5e7eb;
+    text-decoration: none;
+    transition: all 0.2s;
+}
+.atsv-list-tab.active {
+    background: #0073aa;
+    color: #fff;
+    border-color: #0073aa;
+}
+.atsv-list-tab:not(.active):hover {
+    background: #e0e7ef;
+    color: #0073aa;
+}
+.atsv-list-table-wrap {
+    overflow-x: auto;
+    margin-bottom: 18px;
+}
+.atsv-list-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+}
+.atsv-list-table th, .atsv-list-table td {
+    text-align: center;
+    padding: 14px 8px;
+    font-size: 15px;
+}
+.atsv-list-table th {
+    background: #f3f4f6;
+    font-weight: 600;
+    color: #23282d;
+    border-bottom: 2px solid #e5e7eb;
+}
+.atsv-list-table tbody tr {
+    border-bottom: 1px solid #f1f3f4;
+    transition: background 0.2s;
+}
+.atsv-list-table tbody tr:hover {
+    background: #f8fafc;
+}
+.atsv-list-empty {
+    color: #aaa;
+    font-style: italic;
+    text-align: center;
+    padding: 32px 0;
+}
+.atsv-list-tagname {
+    font-weight: 600;
+    color: #23282d;
+    font-size: 16px;
+    margin-bottom: 2px;
+}
+.atsv-list-tagslug {
+    font-size: 12px;
+    color: #888;
+    margin-top: 2px;
+}
+.atsv-list-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #fff;
+}
+.atsv-list-badge-red {
+    background: #f87171;
+}
+.atsv-list-badge-green {
+    background: #34d399;
+}
+.atsv-list-desc {
+    max-width: 260px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #374151;
+    display: inline-block;
+}
+.atsv-list-desc-empty {
+    color: #bbb;
+    font-style: italic;
+}
+.atsv-list-btn {
+    padding: 6px 16px;
+    border-radius: 6px;
+    border: none;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin: 0 2px;
+}
+.atsv-list-btn-blue {
+    background: #0073aa;
+    color: #fff;
+}
+.atsv-list-btn-blue:hover {
+    background: #005a87;
+}
+.atsv-list-btn-yellow {
+    background: #fbbf24;
+    color: #fff;
+}
+.atsv-list-btn-yellow:hover {
+    background: #f59e0b;
+}
+.atsv-list-done {
+    color: #22c55e;
+    font-size: 15px;
+    font-weight: 600;
+}
+.atsv-list-pagination {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+}
+.atsv-list-pageinfo {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 2px;
+}
+.atsv-list-pages {
+    display: flex;
+    gap: 6px;
+}
+.atsv-list-pagebtn {
+    padding: 6px 14px;
+    border-radius: 6px;
+    border: 1px solid #d1d5db;
+    background: #fff;
+    color: #0073aa;
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.2s;
+}
+.atsv-list-pagebtn.active, .atsv-list-pagebtn:hover {
+    background: #0073aa;
+    color: #fff;
+    border-color: #0073aa;
+}
+@media (max-width: 900px) {
+    .atsv-list-wrap {
+        padding: 16px 4px 12px 4px;
+    }
+    .atsv-list-table th, .atsv-list-table td {
+        padding: 8px 2px;
+        font-size: 13px;
+    }
+    .atsv-list-title {
+        font-size: 18px;
+    }
+    .atsv-list-toolbar {
+        gap: 8px;
+    }
+}
+/* Auto Tag SEO 管理界面样式 */
+
+/* 隐藏WordPress底部信息 */
+#wpfooter {
+    display: none !important;
+}
+
+.auto-tag-seo-container {
+    max-width: 1200px;
+    margin: 20px 0;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* 页面标题 */
+.ats-header {
+    padding: 30px 30px 20px;
+    border-bottom: 1px solid #e5e5e5;
+}
+
+.ats-header h1 {
+    font-size: 28px;
+    font-weight: 600;
+    color: #23282d;
+    margin: 0 0 8px 0;
+}
+
+.ats-header p {
+    color: #666;
+    margin: 0;
+    font-size: 14px;
+}
+
+/* 统计卡片网格 */
+.ats-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    padding: 30px;
+    margin: 0;
+}
+
+.ats-stat-card {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+}
+
+.ats-stat-card.blue {
+    background: #e3f2fd;
+    border-color: #bbdefb;
+}
+
+.ats-stat-card.green {
+    background: #e8f5e8;
+    border-color: #c8e6c9;
+}
+
+.ats-stat-card.yellow {
+    background: #fff8e1;
+    border-color: #ffecb3;
+}
+
+.ats-stat-card.purple {
+    background: #f3e5f5;
+    border-color: #e1bee7;
+}
+
+.ats-stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 16px;
+    font-size: 20px;
+}
+
+.ats-stat-card.blue .ats-stat-icon {
+    background: #2196f3;
+    color: white;
+}
+
+.ats-stat-card.green .ats-stat-icon {
+    background: #4caf50;
+    color: white;
+}
+
+.ats-stat-card.yellow .ats-stat-icon {
+    background: #ff9800;
+    color: white;
+}
+
+.ats-stat-card.purple .ats-stat-icon {
+    background: #9c27b0;
+    color: white;
+}
+
+.ats-stat-content h3 {
+    font-size: 12px;
+    font-weight: 500;
+    margin: 0 0 4px 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.ats-stat-card.blue .ats-stat-content h3 {
+    color: #1976d2;
+}
+
+.ats-stat-card.green .ats-stat-content h3 {
+    color: #388e3c;
+}
+
+.ats-stat-card.yellow .ats-stat-content h3 {
+    color: #f57c00;
+}
+
+.ats-stat-card.purple .ats-stat-content h3 {
+    color: #7b1fa2;
+}
+
+.ats-stat-number {
+    font-size: 24px;
+    font-weight: 700;
+    margin: 0;
+    color: #23282d;
+}
+
+/* 操作区域 */
+.ats-actions {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 0 30px 30px;
+}
+
+.ats-actions h2 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #23282d;
+    margin: 0 0 16px 0;
+}
+
+.ats-button-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+/* 表单网格 */
+.ats-form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    margin-bottom: 24px;
+}
+
+.ats-form-group {
+    margin-bottom: 0;
+}
+
+.ats-form-label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: #23282d;
+}
+
+.ats-form-input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #dcdcde;
+    border-radius: 6px;
+    font-size: 14px;
+    line-height: 1.5;
+    color: #32373c;
+    background-color: #fff;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.ats-form-input:focus {
+    outline: none;
+    border-color: #007cba;
+    box-shadow: 0 0 0 1px rgba(0, 124, 186, 0.3);
+}
+
+.ats-form-hint {
+    font-size: 12px;
+    color: #666;
+    margin-top: 4px;
+}
+
+.ats-btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.ats-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.ats-btn-primary {
+    background: #0073aa;
+    color: white;
+}
+
+.ats-btn-primary:hover:not(:disabled) {
+    background: #005a87;
+}
+
+.ats-btn-success {
+    background: #46b450;
+    color: white;
+}
+
+.ats-btn-success:hover:not(:disabled) {
+    background: #3a9540;
+}
+
+.ats-btn-secondary {
+    background: #6c757d;
+    color: white;
+}
+
+.ats-btn-secondary:hover:not(:disabled) {
+    background: #5a6268;
+}
+
+/* 消息提示 */
+.ats-message {
+    padding: 12px 16px;
+    border-radius: 6px;
+    margin-top: 16px;
+}
+
+.ats-message.hidden {
+    display: none;
+}
+
+.ats-message.success {
+    background: #d4edda;
+    border: 1px solid #c3e6cb;
+    color: #155724;
+}
+
+.ats-message.error {
+    background: #f8d7da;
+    border: 1px solid #f5c6cb;
+    color: #721c24;
+}
+
+/* 标签列表 */
+.ats-table-container {
+    background: white;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    margin: 0 30px 30px;
+    overflow: hidden;
+}
+
+.ats-table-header {
+    padding: 20px 24px 16px;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.ats-table-header {
+    padding: 20px 24px 0 24px;
+    border-bottom: none;
+    text-align: center;
+}
+.ats-table-header h2 {
+    font-size: 20px;
+    font-weight: 700;
+    color: #23282d;
+    margin: 0 0 8px 0;
+    letter-spacing: 1px;
+}
+
+.ats-table-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    padding: 8px 24px 0 24px;
+    margin-bottom: 8px;
+}
+.ats-table-toolbar-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+.ats-table-toolbar-left p {
+    margin: 0;
+    font-size: 14px;
+    color: #333;
+}
+.ats-pagination {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px 24px;
+    border-top: 1px solid #e9ecef;
+    background: #fff;
+    display: flex;
+    gap: 8px;
+}
+    margin: 0;
+}
+
+.ats-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.ats-table thead {
+    background: #f8f9fa;
+}
+
+.ats-table th {
+    padding: 12px 16px;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 500;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.ats-table td {
+    padding: 16px;
+    border-bottom: 1px solid #f1f3f4;
+    vertical-align: top;
+}
+
+.ats-table tbody tr:hover {
+    background: #f8f9fa;
+}
+
+.ats-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* 标签名称列 */
+.ats-tag-name {
+    font-weight: 500;
+    color: #23282d;
+    margin: 0 0 4px 0;
+}
+
+.ats-tag-slug {
+    font-size: 12px;
+    color: #666;
+    margin: 0;
+}
+
+/* 状态标签 */
+.ats-status-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: middle;
+    color: #fff;
+    background-color: #6c757d;
+    border: 1px solid transparent;
+}
+
+.ats-status-badge.pending {
+    background-color: #f57c00;
+}
+
+.ats-status-badge.completed {
+    background-color: #4caf50;
+}
+
+.ats-status-badge.error {
+    background-color: #f44336;
+}
+
+/* 过滤标签样式 */
+.ats-filter-tabs {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.ats-filter-tab {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 500;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    color: #555;
+    background-color: #f1f1f1;
+    border: 1px solid #ddd;
+}
+
+.ats-filter-tab:hover {
+    background-color: #e6e6e6;
+}
+
+.ats-filter-tab.active {
+    color: #fff;
+    background-color: #0073aa;
+    border-color: #0073aa;
+}
+
+.ats-filter-tab.pending {
+    color: #dc3545;
+    background-color: #f8d7da;
+    border-color: #f5c6cb;
+}
+
+.ats-filter-tab.pending.active {
+    color: #fff;
+    background-color: #dc3545;
+    border-color: #dc3545;
+}
+
+.ats-filter-tab.completed {
+    color: #28a745;
+    background-color: #d4edda;
+    border-color: #c3e6cb;
+}
+
+.ats-filter-tab.completed.active {
+    color: #fff;
+    background-color: #28a745;
+    border-color: #28a745;
+}
+
+.ats-filter-tab.all {
+    color: #000;
+    background-color: #f8f9fa;
+    border-color: #dee2e6;
+}
+
+.ats-filter-tab.all.active {
+    color: #fff;
+    background-color: #000;
+    border-color: #000;
+}
+
+/* 分页样式 */
+.ats-pagination {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    border-top: 1px solid #e9ecef;
+    gap: 12px;
+}
+
+.ats-pagination-links {
+    display: flex;
+    gap: 8px;
+}
+
+.ats-pagination-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+    color: #555;
+    background-color: #f1f1f1;
+    border: 1px solid #ddd;
+    transition: all 0.2s ease;
+}
+
+.ats-pagination-link:hover {
+    background-color: #e6e6e6;
+}
+
+.ats-pagination-link.active {
+    color: #fff;
+    background-color: #0073aa;
+    border-color: #0073aa;
+}
+
+.ats-pagination-link.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.ats-per-page {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.ats-per-page select {
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid #ddd;
+    background-color: #fff;
+    font-size: 14px;
+}
+
+/* 按钮样式补充 */
+.ats-btn-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.ats-btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.ats-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.ats-btn-primary {
+    background: #0073aa;
+    color: white;
+}
+
+.ats-btn-primary:hover:not(:disabled) {
+    background: #005a87;
+}
+
+.ats-btn-success {
+    background: #46b450;
+    color: white;
+}
+
+.ats-btn-success:hover:not(:disabled) {
+    background: #3a9540;
+}
+
+.ats-btn-secondary {
+    background: #6c757d;
+    color: white;
+}
+
+.ats-btn-secondary:hover:not(:disabled) {
+    background: #5a6268;
+}
+
+.ats-btn-danger {
+    background: #dc3232;
+    color: white;
+}
+
+.ats-btn-danger:hover:not(:disabled) {
+    background: #a00;
+}
+
+.ats-btn-outline {
+    background: transparent;
+    border: 1px solid #6c757d;
+    color: #6c757d;
+}
+
+.ats-btn-outline:hover:not(:disabled) {
+    background: #6c757d;
+    color: white;
+}
+
+/* 消息提示 */
+.ats-message {
+    padding: 12px 16px;
+    border-radius: 6px;
+    margin-top: 16px;
+}
+
+.ats-message.hidden {
+    display: none;
+}
+
+.ats-message.success {
+    background: #d4edda;
+    border: 1px solid #c3e6cb;
+    color: #155724;
+}
+
+.ats-message.error {
+    background: #f8d7da;
+    border: 1px solid #f5c6cb;
+    color: #721c24;
+}
+
+/* ========== 标签样式 ========== */
+.ats-table-container {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    background-color: #f3f4f6; /* 增加背景以避免透明 */
+}
+
+/* 状态标签：无描述 */
+.ats-status-badge.no-desc {
+    background-color: #fee2e2;
+    color: #dc2626;
+}
+
+/* 状态标签：有描述 */
+.ats-status-badge.has-desc {
+    background-color: #dcfce7;
+    color: #16a34a;
+}
+
+/* ========== 描述列样式 ========== */
+.ats-description {
+    max-width: 300px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #374151;
+    display: inline-block;
+}
+
+.ats-description.empty {
+    color: #9ca3af;
+    font-style: italic;
+}
+
+/* ========== 操作按钮 ========== */
+.ats-action-btn {
+    background: none;
+    border: none;
+    color: #0073aa;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.ats-action-btn:hover {
+    background: #f0f6fc;
+    color: #005a87;
+}
+
+.ats-action-btn.regenerate {
+    color: #d97706;
+}
+
+.ats-action-btn.regenerate:hover {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+/* ========== 分页区块 ========== */
+.ats-pagination {
+    padding: 20px 24px;
+    border-top: 1px solid #e9ecef;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #fff;
+}
+
+.ats-pagination-info {
+    font-size: 14px;
+    color: #666;
+}
+
+.ats-pagination-nav {
+    display: flex;
+    gap: 8px;
+}
+
+/* 分页按钮样式 */
+.ats-page-link {
+    padding: 8px 12px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #666;
+    background: white;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.ats-page-link:hover {
+    background: #f9fafb;
+    color: #374151;
+}
+
+.ats-page-link.current {
+    color: #0073aa;
+    background: #f0f6fc;
+    border-color: #0073aa;
+}
+
+
+/* 系统信息 */
+.ats-system-info {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 0 30px 40px;
+}
+
+.ats-system-info h2 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #23282d;
+    margin: 0 0 16px 0;
+}
+
+.ats-info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+}
+
+.ats-info-item {
+    font-size: 14px;
+}
+
+.ats-info-label {
+    font-weight: 500;
+    color: #374151;
+    margin-right: 8px;
+}
+
+.ats-info-value {
+    color: #666;
+}
+
+/* 过滤标签 */
+.ats-filter-tabs {
+    display: flex;
+    gap: 12px;
+}
+
+.ats-filter-tab {
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #666;
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.ats-filter-tab:hover {
+    background: #e9ecef;
+    color: #374151;
+}
+
+.ats-filter-tab.active {
+    border-color: #0073aa;
+    font-weight: 600;
+}
+
+.ats-filter-tab.pending {
+    color: #dc2626;
+    background: #fee2e2;
+    border-color: #fca5a5;
+}
+
+.ats-filter-tab.pending.active {
+    color: #b91c1c;
+    background: #fecaca;
+    border-color: #ef4444;
+}
+
+.ats-filter-tab.completed {
+    color: #16a34a;
+    background: #dcfce7;
+    border-color: #86efac;
+}
+
+.ats-filter-tab.completed.active {
+    color: #15803d;
+    background: #bbf7d0;
+    border-color: #22c55e;
+}
+
+.ats-filter-tab.all {
+    color: #475569;
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+}
+
+.ats-filter-tab.all.active {
+    color: #334155;
+    background: #e2e8f0;
+    border-color: #64748b;
+}
+
+/* 每页显示选择器 */
+.ats-per-page-selector {
+    display: flex;
+    align-items: center;
+}
+
+.ats-per-page-selector select {
+    font-size: 13px;
+    padding: 6px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    background: white;
+    cursor: pointer;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.ats-per-page-selector select:focus {
+    outline: none;
+    border-color: #0073aa;
+    box-shadow: 0 0 0 2px rgba(0, 115, 170, 0.2);
+}
+
+/* API配置表单 */
+.ats-config-form {
+    background: white;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 0 30px 30px;
+}
+
+.ats-config-form h2 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #23282d;
+    margin: 0 0 16px 0;
+}
+
+.ats-form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.ats-form-group {
+    margin-bottom: 16px;
+}
+
+.ats-form-label {
+    display: block;
+    font-size: 14px;
+    font-weight: 500;
+    color: #23282d;
+    margin-bottom: 8px;
+}
+
+.ats-form-input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 14px;
+    color: #23282d;
+    transition: border-color 0.2s ease;
+}
+
+.ats-form-input:focus {
+    outline: none;
+    border-color: #0073aa;
+    box-shadow: 0 0 0 2px rgba(0, 115, 170, 0.2);
+}
+
+.ats-form-hint {
+    font-size: 12px;
+    color: #666;
+    margin-top: 4px;
+    margin-bottom: 0;
+}
+
+.ats-form-actions {
+    margin-top: 24px;
+    display: flex;
+    flex-direction: column;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .auto-tag-seo-container {
+        margin: 10px;
+        border-radius: 0;
+    }
+
+    .ats-stats-grid {
+        grid-template-columns: 1fr;
+        padding: 20px;
+    }
+
+    .ats-actions,
+    .ats-table-container,
+    .ats-system-info {
+        margin: 0 20px 20px;
+    }
+
+    .ats-table-container {
+        overflow-x: auto;
+    }
+
+    .ats-table {
+        min-width: 600px;
+    }
+
+    .ats-pagination {
+        flex-direction: column;
+        gap: 16px;
+        align-items: flex-start;
+    }
+
+    .ats-filter-tabs {
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .ats-table-header > div {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 12px;
+    }
+
+    .ats-table-header > div > div:first-child {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 8px;
+    }
+}
