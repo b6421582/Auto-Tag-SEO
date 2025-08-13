@@ -2,8 +2,8 @@
 /**
  * Plugin Name: Auto Tag SEO
  * Plugin URI: https://github.com/b6421582/Auto-Tag-SEO
- * Description: 自动为WordPress标签生成SEO友好的英文描述，使用BigModel GLM-4.5-Flash模型提升网站SEO效果
- * Version: 1.0.0
+ * Description: Automatically generates SEO-friendly English descriptions for WordPress tags using BigModel GLM-4.5-Flash.
+ * Version: 1.2.1
  * Author: CatchIdeas
  * Author URI: https://catchideas.com
  * Text Domain: auto-tag-seo
@@ -32,7 +32,7 @@ if (!defined('ABSPATH')) {
 }
 
 // 定义插件常量
-define('AUTO_TAG_SEO_VERSION', '1.0.0');
+define('AUTO_TAG_SEO_VERSION', '1.2.1');
 define('AUTO_TAG_SEO_PLUGIN_FILE', __FILE__);
 define('AUTO_TAG_SEO_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('AUTO_TAG_SEO_PLUGIN_URL', plugin_dir_url(__FILE__));
@@ -129,6 +129,9 @@ class AutoTagSEO {
 
         // 添加设置链接到插件页面
         add_filter('plugin_action_links_' . AUTO_TAG_SEO_PLUGIN_BASENAME, array($this, 'add_action_links'));
+
+        // 注册WP Cron处理队列的hook（异步分批任务）
+        add_action('auto_tag_seo_process_queue', array($this, 'handle_cron_process_queue'), 10, 1);
     }
 
     /**
@@ -147,8 +150,8 @@ class AutoTagSEO {
             wp_die(__('Auto Tag SEO 需要 WordPress 5.0 或更高版本。', 'auto-tag-seo'));
         }
 
-        // 设置默认选项（强制更新到BigModel配置）
-        $this->set_default_options(true);
+        // 设置默认选项（仅在首次安装时写入，不覆盖已有配置）
+        $this->set_default_options(false); // Confirmed via 寸止
     }
 
     /**
@@ -196,8 +199,8 @@ class AutoTagSEO {
      * 添加设置链接到插件页面
      */
     public function add_action_links($links) {
-        $settings_link = '<a href="' . admin_url('options-general.php?page=auto-tag-seo') . '">' . __('设置', 'auto-tag-seo') . '</a>';
-        array_unshift($links, $settings_link);
+        $settings_link = '<a href="' . admin_url('options-general.php?page=auto-tag-seo') . '">' . __('Settings', 'auto-tag-seo') . '</a>';
+        $links[] = $settings_link; // Append so the order is: Deactivate | Settings
         return $links;
     }
 
@@ -220,6 +223,16 @@ class AutoTagSEO {
      */
     public function get_admin() {
         return $this->admin;
+    }
+
+    /**
+     * WP Cron 回调：处理分批任务队列
+     */
+    public function handle_cron_process_queue($job_id) {
+        if (!$job_id) { return; }
+        if ($this->tag_processor) {
+            $this->tag_processor->process_queue($job_id);
+        }
     }
 
     /**

@@ -24,12 +24,18 @@ class AutoTagSEO_Tag_Processor {
     private $table_prefix;
 
     /**
+     * 队列存储option键名
+     */
+    private $job_option_key;
+
+    /**
      * 构造函数
      */
     public function __construct() {
         global $wpdb;
         $this->wpdb = $wpdb;
         $this->table_prefix = $wpdb->prefix; // 自动检测表前缀 (wp_ 或 kt_ 等)
+        $this->job_option_key = 'auto_tag_seo_jobs'; // 存储简易任务队列
     }
 
     /**
@@ -58,23 +64,35 @@ class AutoTagSEO_Tag_Processor {
      * 更新标签描述
      */
     public function update_tag_description($term_id, $description) {
-        $term_taxonomy_table = $this->table_prefix . 'term_taxonomy';
-
-        $result = $this->wpdb->update(
-            $term_taxonomy_table,
-            array('description' => $description),
-            array(
-                'term_id' => $term_id,
-                'taxonomy' => 'post_tag'
-            ),
-            array('%s'),
-            array('%d', '%s')
-        );
-
-        if ($result === false) {
+        // 使用 WP API 更新并触发缓存/钩子
+        $clean_desc = trim(wp_strip_all_tags((string) $description));
+        if ($clean_desc === '') {
             return false;
         }
+        // 长度兜底（与 API 层一致，最大 160 字符）
+        if (strlen($clean_desc) > 160) {
+            $clean_desc = substr($clean_desc, 0, 157) . '...';
+        }
 
+        $result = wp_update_term((int)$term_id, 'post_tag', array('description' => $clean_desc));
+        if (is_wp_error($result)) {
+            // 兜底：失败时尝试直接更新并清理缓存
+            $term_taxonomy_table = $this->table_prefix . 'term_taxonomy';
+            $db_update = $this->wpdb->update(
+                $term_taxonomy_table,
+                array('description' => $clean_desc),
+                array(
+                    'term_id' => (int)$term_id,
+                    'taxonomy' => 'post_tag'
+                ),
+                array('%s'),
+                array('%d', '%s')
+            );
+            if ($db_update === false) {
+                return false;
+            }
+            clean_term_cache((int)$term_id, 'post_tag');
+        }
         return true;
     }
 
@@ -253,11 +271,107 @@ class AutoTagSEO_Tag_Processor {
             LIMIT %d OFFSET %d
         ", $limit, $offset);
 
+
         $tags = $this->wpdb->get_results($sql);
 
         return array(
             'tags' => $tags,
             'total' => (int) $total
+        );
+    }
+
+
+    /**
+     * 创建队列任务
+     * @param array $term_ids 要处理的 term_id 列表
+     * @param int $chunk_size 每批处理数量
+     * @param int $interval_seconds 批次间隔秒
+     * @return string $job_id
+     */
+    public function create_queue_job($term_ids, $chunk_size = 5, $interval_seconds = 10) {
+        $term_ids = array_values(array_unique(array_map('intval', (array)$term_ids)));
+        if (empty($term_ids)) { return ''; }
+        $job_id = 'ats_job_' . time() . '_' . wp_generate_uuid4();
+        $jobs = get_option($this->job_option_key, array());
+        $jobs[$job_id] = array(
+            'total' => count($term_ids),
+            'pending' => $term_ids,
+            'success' => 0,
+            'failed' => 0,
+            'errors' => array(),
+            'chunk_size' => max(1, intval($chunk_size)),
+            'interval' => max(5, intval($interval_seconds)),
+            'next_run' => time(),
+        );
+        update_option($this->job_option_key, $jobs);
+        // 立即安排首次执行
+        wp_schedule_single_event(time() + 1, 'auto_tag_seo_process_queue', array($job_id));
+        return $job_id;
+    }
+
+    /**
+     * 处理队列任务的一个批次
+     */
+    public function process_queue($job_id) {
+        $jobs = get_option($this->job_option_key, array());
+        if (!isset($jobs[$job_id])) { return; }
+        $job = $jobs[$job_id];
+        $chunk = array_splice($job['pending'], 0, $job['chunk_size']);
+        if (empty($chunk)) {
+            // 完成，写回并结束
+            $jobs[$job_id] = $job;
+            update_option($this->job_option_key, $jobs);
+            return;
+        }
+
+        $api_handler = auto_tag_seo()->get_api_handler();
+        foreach ($chunk as $term_id) {
+            $term = get_term($term_id, 'post_tag');
+            if (!$term || is_wp_error($term)) {
+                $job['failed']++;
+                $job['errors'][] = 'Term not found: ' . $term_id;
+                continue;
+            }
+            try {
+                $desc = $api_handler->generate_tag_description($term->name);
+                if ($desc && $this->update_tag_description($term_id, $desc)) {
+                    $job['success']++;
+                } else {
+                    $job['failed']++;
+                    $job['errors'][] = 'Update failed for term_id ' . $term_id;
+                }
+                sleep(1); // 轻度限速
+            } catch (Exception $e) {
+                $job['failed']++;
+                $job['errors'][] = 'Exception for term_id ' . $term_id . ': ' . $e->getMessage();
+            }
+        }
+
+        // 写回当前进度
+        $jobs[$job_id] = $job;
+        update_option($this->job_option_key, $jobs);
+
+        // 若仍有剩余，调度下一次
+        if (!empty($job['pending'])) {
+            $next = time() + (int)$job['interval'];
+            wp_schedule_single_event($next, 'auto_tag_seo_process_queue', array($job_id));
+        }
+    }
+
+    /**
+     * 查询队列状态
+     */
+    public function get_queue_status($job_id) {
+        $jobs = get_option($this->job_option_key, array());
+        if (!isset($jobs[$job_id])) { return null; }
+        $job = $jobs[$job_id];
+        return array(
+            'total' => (int)$job['total'],
+            'pending' => count($job['pending']),
+            'success' => (int)$job['success'],
+            'failed' => (int)$job['failed'],
+            'done' => count($job['pending']) === 0,
+            'errors' => $job['errors'],
         );
     }
 

@@ -24,6 +24,7 @@ class AutoTagSEO_Admin {
         add_action('wp_ajax_auto_tag_seo_test_api', array($this, 'ajax_test_api'));
         add_action('wp_ajax_auto_tag_seo_generate_single', array($this, 'ajax_generate_single'));
         add_action('wp_ajax_auto_tag_seo_update_config', array($this, 'ajax_update_config'));
+        add_action('wp_ajax_auto_tag_seo_queue_status', array($this, 'ajax_queue_status')); // 新增队列状态查询
     }
 
     /**
@@ -62,11 +63,18 @@ class AutoTagSEO_Admin {
             AUTO_TAG_SEO_VERSION
         );
 
-        // 加载jQuery
+        // 加载jQuery与自定义管理脚本
         wp_enqueue_script('jquery');
+        wp_enqueue_script(
+            'auto-tag-seo-admin-js',
+            AUTO_TAG_SEO_PLUGIN_URL . 'assets/admin.js',
+            array('jquery'),
+            AUTO_TAG_SEO_VERSION,
+            true
+        );
 
-        // 本地化脚本
-        wp_localize_script('jquery', 'autoTagSeoAjax', array(
+        // 本地化脚本到自定义句柄（而非绑定到 jQuery）
+        wp_localize_script('auto-tag-seo-admin-js', 'autoTagSeoAjax', array(
             'ajaxurl' => admin_url('admin-ajax.php'),
             'nonce' => wp_create_nonce('auto_tag_seo_nonce'),
             'strings' => array(
@@ -75,7 +83,7 @@ class AutoTagSEO_Admin {
                 'error' => '错误',
                 'confirm_batch' => '确定要批量生成标签描述吗？'
             )
-        ));
+        )); // Confirmed via 寸止
     }
 
     /**
@@ -103,9 +111,10 @@ class AutoTagSEO_Admin {
         $total_tags = $tags_data['total'];
         $total_pages = ceil($total_tags / $per_page);
 
-        // 处理表单提交
+        // 处理表单提交（字段级校验与清洗）
         if (isset($_POST['submit']) && wp_verify_nonce($_POST['_wpnonce'], 'auto_tag_seo_options-options')) {
-            $options = $_POST['auto_tag_seo_options'];
+            $raw = isset($_POST['auto_tag_seo_options']) ? (array) $_POST['auto_tag_seo_options'] : array();
+            $options = $this->validate_options($raw); // sanitize + validate
             update_option('auto_tag_seo_options', $options);
             echo '<div class="notice notice-success"><p>设置已保存！</p></div>';
         }
@@ -164,7 +173,7 @@ class AutoTagSEO_Admin {
                             <?php echo $stats['without_description'] == 0 ? 'disabled' : ''; ?>>
                         批量生成当前页描述 (<?php echo min($stats['without_description'], $per_page); ?>个)
                     </button>
-                    
+
                     <button id="refresh-stats-btn" class="ats-btn ats-btn-secondary">
                         刷新统计
                     </button>
@@ -174,14 +183,14 @@ class AutoTagSEO_Admin {
 
 
             <!-- 新标签列表区块 -->
-            <div class="atsv-list-wrap">
-                <div class="atsv-list-title">标签列表</div>
-                <div class="atsv-list-toolbar">
-                    <div class="atsv-list-toolbar-group">
-                        <span class="atsv-list-stat">共 <?php echo $total_tags; ?> 个标签</span>
-                        <span class="atsv-list-stat">当前第 <?php echo $current_page; ?> 页</span>
-                        <span class="atsv-list-stat">每页显示:</span>
-                        <select id="per-page-select" class="atsv-list-select">
+            <div class="ats-card">
+                <div class="ats-card-title">标签列表</div>
+                <div class="ats-toolbar">
+                    <div class="ats-toolbar-group">
+                        <span class="ats-toolbar-stat">共 <?php echo $total_tags; ?> 个标签</span>
+                        <span class="ats-toolbar-stat">当前第 <?php echo $current_page; ?> 页</span>
+                        <span class="ats-toolbar-stat">每页显示:</span>
+                        <select id="per-page-select" class="ats-select">
                             <option value="5" <?php echo $per_page == 5 ? 'selected' : ''; ?>>5条</option>
                             <option value="10" <?php echo $per_page == 10 ? 'selected' : ''; ?>>10条</option>
                             <option value="20" <?php echo $per_page == 20 ? 'selected' : ''; ?>>20条</option>
@@ -189,14 +198,14 @@ class AutoTagSEO_Admin {
                             <option value="100" <?php echo $per_page == 100 ? 'selected' : ''; ?>>100条</option>
                         </select>
                     </div>
-                    <div class="atsv-list-toolbar-group">
-                        <a href="<?php echo admin_url('options-general.php?page=auto-tag-seo&filter=pending&per_page=' . $per_page); ?>" class="atsv-list-tab <?php echo $filter === 'pending' ? 'active' : ''; ?>">待处理 (<?php echo $stats['without_description']; ?>)</a>
-                        <a href="<?php echo admin_url('options-general.php?page=auto-tag-seo&filter=completed&per_page=' . $per_page); ?>" class="atsv-list-tab <?php echo $filter === 'completed' ? 'active' : ''; ?>">已完成 (<?php echo $stats['with_description']; ?>)</a>
-                        <a href="<?php echo admin_url('options-general.php?page=auto-tag-seo&filter=all&per_page=' . $per_page); ?>" class="atsv-list-tab <?php echo $filter === 'all' ? 'active' : ''; ?>">全部 (<?php echo $stats['total']; ?>)</a>
+                    <div class="ats-toolbar-group">
+                        <a href="<?php echo admin_url('options-general.php?page=auto-tag-seo&filter=pending&per_page=' . $per_page); ?>" class="ats-tab <?php echo $filter === 'pending' ? 'active' : ''; ?>">待处理 (<?php echo $stats['without_description']; ?>)</a>
+                        <a href="<?php echo admin_url('options-general.php?page=auto-tag-seo&filter=completed&per_page=' . $per_page); ?>" class="ats-tab <?php echo $filter === 'completed' ? 'active' : ''; ?>">已完成 (<?php echo $stats['with_description']; ?>)</a>
+                        <a href="<?php echo admin_url('options-general.php?page=auto-tag-seo&filter=all&per_page=' . $per_page); ?>" class="ats-tab <?php echo $filter === 'all' ? 'active' : ''; ?>">全部 (<?php echo $stats['total']; ?>)</a>
                     </div>
                 </div>
-                <div class="atsv-list-table-wrap">
-                    <table class="atsv-list-table">
+                <div class="ats-table-wrap">
+                    <table class="ats-table">
                         <thead>
                             <tr>
                                 <th>标签名称</th>
@@ -209,37 +218,37 @@ class AutoTagSEO_Admin {
                         <tbody>
                             <?php if (empty($tags)): ?>
                                 <tr>
-                                    <td colspan="5" class="atsv-list-empty">暂无标签数据</td>
+                                    <td colspan="5" class="ats-empty">暂无标签数据</td>
                                 </tr>
                             <?php else: ?>
                                 <?php foreach ($tags as $tag): ?>
                                     <tr>
                                         <td>
-                                            <div class="atsv-list-tagname"><?php echo esc_html($tag->name); ?></div>
-                                            <div class="atsv-list-tagslug"><?php echo esc_html($tag->slug); ?></div>
+                                            <div class="ats-tag-name"><?php echo esc_html($tag->name); ?></div>
+                                            <div class="ats-tag-slug"><?php echo esc_html($tag->slug); ?></div>
                                         </td>
                                         <td><?php echo $tag->count; ?></td>
                                         <td>
                                             <?php if (empty($tag->description)): ?>
-                                                <span class="atsv-list-badge atsv-list-badge-red">无描述</span>
+                                                <span class="ats-badge ats-badge-danger">无描述</span>
                                             <?php else: ?>
-                                                <span class="atsv-list-badge atsv-list-badge-green">已完成</span>
+                                                <span class="ats-badge ats-badge-success">已完成</span>
                                             <?php endif; ?>
                                         </td>
                                         <td>
                                             <?php if (!empty($tag->description)): ?>
-                                                <div class="atsv-list-desc" title="<?php echo esc_attr($tag->description); ?>"><?php echo esc_html($tag->description); ?></div>
+                                                <div class="ats-description" title="<?php echo esc_attr($tag->description); ?>"><?php echo esc_html($tag->description); ?></div>
                                             <?php else: ?>
-                                                <span class="atsv-list-desc-empty">-</span>
+                                                <span class="ats-description empty">-</span>
                                             <?php endif; ?>
                                         </td>
                                         <td>
                                             <?php if (empty($tag->description)): ?>
-                                                <button class="atsv-list-btn atsv-list-btn-blue generate-single-btn" data-term-id="<?php echo $tag->term_id; ?>" data-tag-name="<?php echo esc_attr($tag->name); ?>">生成描述</button>
+                                                <button class="ats-btn ats-btn-primary generate-single-btn" data-term-id="<?php echo $tag->term_id; ?>" data-tag-name="<?php echo esc_attr($tag->name); ?>">生成描述</button>
                                             <?php elseif ($filter === 'completed'): ?>
-                                                <button class="atsv-list-btn atsv-list-btn-yellow regenerate-btn regenerate" data-term-id="<?php echo $tag->term_id; ?>" data-tag-name="<?php echo esc_attr($tag->name); ?>">重新生成</button>
+                                                <button class="ats-btn ats-btn-warning regenerate-btn regenerate" data-term-id="<?php echo $tag->term_id; ?>" data-tag-name="<?php echo esc_attr($tag->name); ?>">重新生成</button>
                                             <?php else: ?>
-                                                <span class="atsv-list-done">✓ 已完成</span>
+                                                <span class="ats-status-done">✓ 已完成</span>
                                             <?php endif; ?>
                                         </td>
                                     </tr>
@@ -249,21 +258,21 @@ class AutoTagSEO_Admin {
                     </table>
                 </div>
                 <?php if ($total_pages > 1): ?>
-                <div class="atsv-list-pagination">
-                    <span class="atsv-list-pageinfo">显示第 <?php echo (($current_page - 1) * $per_page + 1); ?> - <?php echo min($current_page * $per_page, $total_tags); ?> 条，共 <?php echo $total_tags; ?> 条</span>
-                    <div class="atsv-list-pages">
+                <div class="ats-pagination">
+                    <span class="ats-pagination-info">显示第 <?php echo (($current_page - 1) * $per_page + 1); ?> - <?php echo min($current_page * $per_page, $total_tags); ?> 条，共 <?php echo $total_tags; ?> 条</span>
+                    <div class="ats-pagination-nav">
                         <?php if ($current_page > 1): ?>
-                            <a href="<?php echo admin_url('options-general.php?page=auto-tag-seo&filter=' . $filter . '&per_page=' . $per_page . '&paged=' . ($current_page - 1)); ?>" class="atsv-list-pagebtn">上一页</a>
+                            <a href="<?php echo admin_url('options-general.php?page=auto-tag-seo&filter=' . $filter . '&per_page=' . $per_page . '&paged=' . ($current_page - 1)); ?>" class="ats-page-link">上一页</a>
                         <?php endif; ?>
                         <?php
                         $start_page = max(1, $current_page - 2);
                         $end_page = min($total_pages, $current_page + 2);
                         for ($i = $start_page; $i <= $end_page; $i++):
                         ?>
-                            <a href="<?php echo admin_url('options-general.php?page=auto-tag-seo&filter=' . $filter . '&per_page=' . $per_page . '&paged=' . $i); ?>" class="atsv-list-pagebtn<?php echo $i == $current_page ? ' active' : ''; ?>"><?php echo $i; ?></a>
+                            <a href="<?php echo admin_url('options-general.php?page=auto-tag-seo&filter=' . $filter . '&per_page=' . $per_page . '&paged=' . $i); ?>" class="ats-page-link<?php echo $i == $current_page ? ' current' : ''; ?>"><?php echo $i; ?></a>
                         <?php endfor; ?>
                         <?php if ($current_page < $total_pages): ?>
-                            <a href="<?php echo admin_url('options-general.php?page=auto-tag-seo&filter=' . $filter . '&per_page=' . $per_page . '&paged=' . ($current_page + 1)); ?>" class="atsv-list-pagebtn">下一页</a>
+                            <a href="<?php echo admin_url('options-general.php?page=auto-tag-seo&filter=' . $filter . '&per_page=' . $per_page . '&paged=' . ($current_page + 1)); ?>" class="ats-page-link">下一页</a>
                         <?php endif; ?>
                     </div>
                 </div>
@@ -271,7 +280,7 @@ class AutoTagSEO_Admin {
             </div>
 
             <!-- API配置 -->
-            <div class="ats-actions" style="margin-bottom: 40px;">
+            <div class="ats-config-form">
                 <h2>API参数配置</h2>
                 <form method="post" action="">
                     <?php wp_nonce_field('auto_tag_seo_options-options'); ?>
@@ -280,38 +289,38 @@ class AutoTagSEO_Admin {
                             <label for="api_endpoint" class="ats-form-label">API端点URL</label>
                             <input type="text" id="api_endpoint" name="auto_tag_seo_options[api_endpoint]" value="<?php echo esc_attr($options['api_endpoint'] ?? 'https://open.bigmodel.cn/api/paas/v4/chat/completions'); ?>" class="ats-form-input">
                         </div>
-                        
+
                         <div class="ats-form-group">
                             <label for="model" class="ats-form-label">模型名称</label>
                             <input type="text" id="model" name="auto_tag_seo_options[model]" value="<?php echo esc_attr($options['model'] ?? 'glm-4.5-flash'); ?>" class="ats-form-input">
                         </div>
-                        
+
                         <div class="ats-form-group">
                             <label for="max_tokens" class="ats-form-label">最大Tokens</label>
                             <input type="number" id="max_tokens" name="auto_tag_seo_options[max_tokens]" value="<?php echo esc_attr($options['max_tokens'] ?? 200); ?>" min="1" max="1000" class="ats-form-input">
                         </div>
-                        
+
                         <div class="ats-form-group">
                             <label for="temperature" class="ats-form-label">温度参数</label>
                             <input type="number" id="temperature" name="auto_tag_seo_options[temperature]" value="<?php echo esc_attr($options['temperature'] ?? 0.3); ?>" step="0.1" min="0" max="2" class="ats-form-input">
                         </div>
-                        
+
                         <div class="ats-form-group">
                             <label for="top_p" class="ats-form-label">Top P</label>
                             <input type="number" id="top_p" name="auto_tag_seo_options[top_p]" value="<?php echo esc_attr($options['top_p'] ?? 0.8); ?>" step="0.1" min="0" max="1" class="ats-form-input">
                         </div>
-                        
+
                         <div class="ats-form-group">
                             <label for="frequency_penalty" class="ats-form-label">频率惩罚</label>
                             <input type="number" id="frequency_penalty" name="auto_tag_seo_options[frequency_penalty]" value="<?php echo esc_attr($options['frequency_penalty'] ?? 0.1); ?>" step="0.1" min="0" max="2" class="ats-form-input">
                         </div>
-                        
+
                         <div class="ats-form-group">
                             <label for="system_prompt" class="ats-form-label">系统提示词</label>
                             <textarea id="system_prompt" name="auto_tag_seo_options[system_prompt]" rows="4" class="ats-form-input" style="resize: vertical;"><?php echo esc_textarea($options['system_prompt'] ?? 'Generate a concise English SEO description for the given WordPress tag. Maximum 160 characters. SEO-focused keywords. Plain English only. No special characters or formatting.'); ?></textarea>
                             <p class="ats-form-hint" style="font-size: 12px; color: #666; margin-top: 4px;">指导AI生成描述的提示词，不超过500个字符</p>
                         </div>
-                        
+
                         <div class="ats-form-group">
                             <label for="api_key" class="ats-form-label">API密钥</label>
                             <input type="password" id="api_key" name="auto_tag_seo_options[api_key]" value="<?php echo esc_attr($options['api_key'] ?? ''); ?>" class="ats-form-input" autocomplete="off" placeholder="请填写您的 BigModel API Key">
@@ -330,127 +339,7 @@ class AutoTagSEO_Admin {
 
         </div>
 
-        <script>
-        jQuery(document).ready(function($) {
-            // 测试API连接
-            $('#test-api-btn').click(function() {
-                var btn = $(this);
-                btn.prop('disabled', true).text('测试中...');
-
-                $.post(autoTagSeoAjax.ajaxurl, {
-                    action: 'auto_tag_seo_test_api',
-                    nonce: autoTagSeoAjax.nonce
-                }, function(response) {
-                    var resultDiv = $('#operation-result');
-                    resultDiv.removeClass('hidden success error');
-
-                    if (response.success) {
-                        resultDiv.addClass('success').html('API连接成功！测试结果: ' + response.data.test_result);
-                    } else {
-                        resultDiv.addClass('error').html('API连接失败: ' + response.data);
-                    }
-                }).always(function() {
-                    btn.prop('disabled', false).text('测试API连接');
-                });
-            });
-
-            // 批量处理
-            $('#batch-process-btn').click(function() {
-                if (!confirm('确定要批量生成当前页面的标签描述吗？')) {
-                    return;
-                }
-
-                var btn = $(this);
-                var originalText = btn.text();
-                btn.prop('disabled', true).text('处理中...');
-
-                // 获取当前页面参数
-                var urlParams = new URLSearchParams(window.location.search);
-                var currentPage = urlParams.get('paged') || 1;
-                var perPage = urlParams.get('per_page') || 10;
-                var filter = urlParams.get('filter') || 'pending';
-
-                $.post(autoTagSeoAjax.ajaxurl, {
-                    action: 'auto_tag_seo_batch_process',
-                    nonce: autoTagSeoAjax.nonce,
-                    current_page: currentPage,
-                    per_page: perPage,
-                    filter: filter
-                }, function(response) {
-                    var resultDiv = $('#operation-result');
-                    resultDiv.removeClass('hidden success error');
-
-                    if (response.success) {
-                        var data = response.data;
-                        resultDiv.addClass('success').html('批量处理完成！成功: ' + data.success + '个，失败: ' + data.failed + '个');
-                        // 立即刷新页面显示最新的待处理标签
-                        setTimeout(function() {
-                            location.reload();
-                        }, 1500);
-                    } else {
-                        resultDiv.addClass('error').html('批量处理失败: ' + response.data);
-                        btn.prop('disabled', false).text(originalText);
-                    }
-                }).fail(function() {
-                    var resultDiv = $('#operation-result');
-                    resultDiv.removeClass('hidden success error').addClass('error').html('请求失败，请重试');
-                    btn.prop('disabled', false).text(originalText);
-                });
-            });
-
-
-
-            // 每页显示数量变更
-            $('#per-page-select').change(function() {
-                var perPage = $(this).val();
-                var currentUrl = new URL(window.location.href);
-                currentUrl.searchParams.set('per_page', perPage);
-                currentUrl.searchParams.delete('paged'); // 重置到第一页
-                window.location.href = currentUrl.toString();
-            });
-
-            // 刷新统计
-            $('#refresh-stats-btn').click(function() {
-                location.reload();
-            });
-
-            // 单个标签生成描述
-            $('.generate-single-btn, .regenerate-btn').click(function() {
-                var btn = $(this);
-                var termId = btn.data('term-id');
-                var tagName = btn.data('tag-name');
-                var originalText = btn.text();
-
-                btn.prop('disabled', true).text('生成中...');
-
-                $.post(autoTagSeoAjax.ajaxurl, {
-                    action: 'auto_tag_seo_generate_single',
-                    nonce: autoTagSeoAjax.nonce,
-                    term_id: termId,
-                    tag_name: tagName
-                }, function(response) {
-                    if (response.success) {
-                        // 显示成功消息
-                        var resultDiv = $('#operation-result');
-                        resultDiv.removeClass('hidden success error').addClass('success').html('成功为标签 "' + tagName + '" 生成描述，正在刷新页面...');
-
-                        // 1.5秒后自动刷新页面，显示最新的待处理标签
-                        setTimeout(function() {
-                            location.reload();
-                        }, 1500);
-                    } else {
-                        var resultDiv = $('#operation-result');
-                        resultDiv.removeClass('hidden success error').addClass('error').html('生成失败: ' + response.data);
-                        // 失败时恢复原文本
-                        btn.prop('disabled', false).text(originalText);
-                    }
-                }).fail(function() {
-                    // 请求失败时恢复原文本
-                    btn.prop('disabled', false).text(originalText);
-                });
-            });
-        });
-        </script>
+        <!-- 已迁移至 assets/admin.js -->
 
         <?php
     }
@@ -480,9 +369,13 @@ class AutoTagSEO_Admin {
             wp_send_json_error('当前页面没有待处理的标签');
         }
 
-        $results = $tag_processor->batch_generate_descriptions_for_tags($tags);
-
-        wp_send_json_success($results);
+        // 队列化：总量=per_page，分批=5，间隔=10秒
+        $term_ids = array_map(function($t){ return intval($t->term_id); }, $tags);
+        $job_id = $tag_processor->create_queue_job($term_ids, 5, 10);
+        if (!$job_id) {
+            wp_send_json_error('无法创建队列任务');
+        }
+        wp_send_json_success(array('job_id' => $job_id));
     }
 
     /**
@@ -516,15 +409,21 @@ class AutoTagSEO_Admin {
         }
 
         $term_id = intval($_POST['term_id']);
-        $tag_name = sanitize_text_field($_POST['tag_name']);
 
-        if (!$term_id || !$tag_name) {
+        if (!$term_id) {
             wp_send_json_error('参数错误');
         }
 
         try {
             $api_handler = auto_tag_seo()->get_api_handler();
             $tag_processor = auto_tag_seo()->get_tag_processor();
+
+            // 服务端获取真实标签名称，避免信任客户端传入
+            $term = get_term($term_id, 'post_tag');
+            if (!$term || is_wp_error($term)) {
+                wp_send_json_error('标签不存在');
+            }
+            $tag_name = $term->name;
 
             // 生成描述
             $description = $api_handler->generate_tag_description($tag_name);
@@ -546,8 +445,31 @@ class AutoTagSEO_Admin {
      * 验证选项
      */
     public function validate_options($input) {
-        // 这里可以添加选项验证逻辑
-        return $input;
+        $out = array();
+        $out['api_endpoint'] = isset($input['api_endpoint']) ? esc_url_raw($input['api_endpoint']) : 'https://open.bigmodel.cn/api/paas/v4/chat/completions';
+        $out['model'] = isset($input['model']) ? sanitize_text_field($input['model']) : 'glm-4.5-flash';
+        $out['max_tokens'] = isset($input['max_tokens']) ? max(1, min(1000, intval($input['max_tokens']))) : 200;
+        $out['temperature'] = isset($input['temperature']) ? max(0, min(2, floatval($input['temperature']))) : 0.3;
+        $out['top_p'] = isset($input['top_p']) ? max(0, min(1, floatval($input['top_p']))) : 0.8;
+        $out['frequency_penalty'] = isset($input['frequency_penalty']) ? max(0, min(2, floatval($input['frequency_penalty']))) : 0.1;
+        $out['system_prompt'] = isset($input['system_prompt']) ? wp_kses_post(wp_trim_words($input['system_prompt'], 200, '')) : '';
+        $out['api_key'] = isset($input['api_key']) ? sanitize_text_field($input['api_key']) : '';
+        return $out;
+    }
+
+
+    /**
+     * AJAX 查询队列状态
+     */
+    public function ajax_queue_status() {
+        check_ajax_referer('auto_tag_seo_nonce', 'nonce');
+        if (!current_user_can('manage_options')) { wp_die('权限不足'); }
+        $job_id = isset($_REQUEST['job_id']) ? sanitize_text_field($_REQUEST['job_id']) : '';
+        if (!$job_id) { wp_send_json_error('缺少job_id'); }
+        $tag_processor = auto_tag_seo()->get_tag_processor();
+        $status = $tag_processor->get_queue_status($job_id);
+        if ($status === null) { wp_send_json_error('任务不存在或已完成'); }
+        wp_send_json_success($status);
     }
 
     /**

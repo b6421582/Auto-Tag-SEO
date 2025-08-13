@@ -1,3 +1,35 @@
+:root{
+  --ats-primary:#2271b1;
+  --ats-success:#1e8c56;
+  --ats-warning:#dba617;
+  --ats-danger:#d63638;
+  --ats-text:#1e1e1e;
+  --ats-muted:#646970;
+  --ats-border:#dcdcde;
+  --ats-bg:#f6f7f7;
+  --ats-radius:6px;
+  --ats-space:16px;
+}
+
+/* 统一组件：卡片、工具栏、按钮、徽章、选择器、标签、空状态（兼容旧类） */
+.ats-card{background:#fff;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.04);margin:0 30px 30px;padding:32px 24px 24px}
+.ats-card-title{text-align:center;font-size:24px;font-weight:700;letter-spacing:2px;margin-bottom:24px;color:#23282d}
+.ats-toolbar{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:24px;margin-bottom:18px}
+.ats-toolbar-group{display:flex;align-items:center;gap:12px}
+.ats-toolbar-stat{font-size:14px;color:#555}
+.ats-select{padding:4px 12px;border-radius:6px;border:1px solid #d1d5db;background:#f9fafb;font-size:14px}
+.ats-tab{padding:6px 18px;border-radius:6px;font-size:14px;font-weight:500;background:#f3f4f6;color:#555;border:1px solid #e5e7eb;text-decoration:none;transition:all .2s}
+.ats-tab.active{background:#0073aa;color:#fff;border-color:#0073aa}
+.ats-tab:not(.active):hover{background:#e0e7ef;color:#0073aa}
+.ats-table-wrap{overflow-x:auto;margin-bottom:18px}
+.ats-empty{color:#aaa;font-style:italic;text-align:center;padding:32px 0}
+.ats-badge{display:inline-block;padding:4px 12px;border-radius:12px;font-size:13px;font-weight:500;color:#fff}
+.ats-badge-success{background:#34d399}
+.ats-badge-danger{background:#f87171}
+.ats-status-done{color:#22c55e;font-size:15px;font-weight:600}
+.ats-btn-warning{background:#fbbf24;color:#fff}
+.ats-btn-warning:hover:not(:disabled){background:#f59e0b}
+
 /* ========== 全新标签列表区块样式 ========== */
 .atsv-list-wrap {
     background: #fff;
@@ -530,12 +562,12 @@
     display: flex;
     gap: 8px;
 }
-    margin: 0;
-}
+
 
 .ats-table {
     width: 100%;
     border-collapse: collapse;
+    table-layout: fixed;
 }
 
 .ats-table thead {
@@ -860,7 +892,7 @@
 
 /* ========== 描述列样式 ========== */
 .ats-description {
-    max-width: 300px;
+    max-width: 100%;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -871,6 +903,29 @@
 .ats-description.empty {
     color: #9ca3af;
     font-style: italic;
+
+/* 列宽与对齐策略 */
+.ats-table th:nth-child(1), .ats-table td:nth-child(1){ width: 26%; text-align: center; }
+.ats-table th:nth-child(2), .ats-table td:nth-child(2){ width: 12%; text-align: center; }
+.ats-table th:nth-child(3), .ats-table td:nth-child(3){ width: 12%; text-align: center; }
+.ats-table th:nth-child(4), .ats-table td:nth-child(4){ width: 38%; text-align: center; }
+.ats-table th:nth-child(5), .ats-table td:nth-child(5){ width: 12%; text-align: center; }
+
+/* 小屏自适应列宽 */
+@media (max-width: 900px){
+  .ats-table th:nth-child(1), .ats-table td:nth-child(1){ width: 40%; }
+  .ats-table th:nth-child(2), .ats-table td:nth-child(2){ width: 15%; }
+  .ats-table th:nth-child(3), .ats-table td:nth-child(3){ width: 15%; }
+  .ats-table th:nth-child(4), .ats-table td:nth-child(4){ width: 20%; }
+  .ats-table th:nth-child(5), .ats-table td:nth-child(5){ width: 10%; }
+}
+
+/* 居中对齐（覆盖列规则的对齐设置，仅调整对齐不改变列宽） */
+.ats-table th, .ats-table td { text-align: center; }
+/* 兼容：名称/描述这些元素在居中容器中显示更自然 */
+.ats-tag-name, .ats-tag-slug, .ats-description { text-align: center; }
+
+
 }
 
 /* ========== 操作按钮 ========== */
