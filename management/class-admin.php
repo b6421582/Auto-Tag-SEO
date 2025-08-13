@@ -25,6 +25,7 @@ class AutoTagSEO_Admin {
         add_action('wp_ajax_auto_tag_seo_generate_single', array($this, 'ajax_generate_single'));
         add_action('wp_ajax_auto_tag_seo_update_config', array($this, 'ajax_update_config'));
         add_action('wp_ajax_auto_tag_seo_queue_status', array($this, 'ajax_queue_status')); // 新增队列状态查询
+        add_action('wp_ajax_auto_tag_seo_force_execute', array($this, 'ajax_force_execute')); // 强制执行队列
     }
 
     /**
@@ -345,7 +346,7 @@ class AutoTagSEO_Admin {
     }
 
     /**
-     * AJAX处理批量生成 - 仅处理当前分页页面的标签
+     * AJAX处理批量生成 - 混合处理模式：小批量同步，大批量异步
      */
     public function ajax_batch_process() {
         check_ajax_referer('auto_tag_seo_nonce', 'nonce');
@@ -369,13 +370,37 @@ class AutoTagSEO_Admin {
             wp_send_json_error('当前页面没有待处理的标签');
         }
 
-        // 队列化：总量=per_page，分批=5，间隔=10秒
-        $term_ids = array_map(function($t){ return intval($t->term_id); }, $tags);
-        $job_id = $tag_processor->create_queue_job($term_ids, 5, 10);
-        if (!$job_id) {
-            wp_send_json_error('无法创建队列任务');
+        // 混合处理模式：小批量同步处理，大批量异步处理
+        if (count($tags) <= 3) {
+            // 小批量：直接同步处理，立即返回结果
+            try {
+                $results = $tag_processor->batch_generate_descriptions_for_tags($tags);
+                wp_send_json_success(array(
+                    'sync_mode' => true,
+                    'results' => $results,
+                    'message' => '批量处理完成！成功: ' . $results['success'] . ' 个，失败: ' . $results['failed'] . ' 个'
+                ));
+            } catch (Exception $e) {
+                wp_send_json_error('同步处理失败: ' . $e->getMessage());
+            }
+        } else {
+            // 大批量：异步队列处理，优化批次大小和间隔
+            $term_ids = array_map(function($t){ return intval($t->term_id); }, $tags);
+
+            // 根据总量动态调整批次大小
+            $total_count = count($term_ids);
+            $chunk_size = min(3, max(2, intval($total_count / 3))); // 批次大小2-3个，确保更快处理
+
+            $job_id = $tag_processor->create_queue_job($term_ids, $chunk_size, 1); // 间隔减少到1秒（实际由前端控制）
+            if (!$job_id) {
+                wp_send_json_error('无法创建队列任务');
+            }
+            wp_send_json_success(array(
+                'sync_mode' => false,
+                'job_id' => $job_id,
+                'message' => '已创建任务，开始快速处理...'
+            ));
         }
-        wp_send_json_success(array('job_id' => $job_id));
     }
 
     /**
@@ -470,6 +495,28 @@ class AutoTagSEO_Admin {
         $status = $tag_processor->get_queue_status($job_id);
         if ($status === null) { wp_send_json_error('任务不存在或已完成'); }
         wp_send_json_success($status);
+    }
+
+    /**
+     * AJAX 强制执行队列任务（不依赖WordPress Cron）
+     */
+    public function ajax_force_execute() {
+        check_ajax_referer('auto_tag_seo_nonce', 'nonce');
+        if (!current_user_can('manage_options')) { wp_die('权限不足'); }
+
+        $job_id = isset($_REQUEST['job_id']) ? sanitize_text_field($_REQUEST['job_id']) : '';
+        if (!$job_id) { wp_send_json_error('缺少job_id'); }
+
+        $tag_processor = auto_tag_seo()->get_tag_processor();
+
+        // 直接执行队列处理，不依赖cron
+        $result = $tag_processor->force_execute_queue($job_id);
+
+        if ($result === null) {
+            wp_send_json_error('任务不存在或已完成');
+        }
+
+        wp_send_json_success($result);
     }
 
     /**

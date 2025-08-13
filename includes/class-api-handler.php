@@ -139,8 +139,8 @@ class AutoTagSEO_API_Handler {
 
             // 如果包含中文，记录并重试
             if ($retry_count < $max_retries) {
-                // 短暂延迟后重试
-                sleep(1);
+                // 优化重试延迟：减少等待时间
+                usleep(500000); // 0.5秒，比原来的1秒更快
             }
         }
 

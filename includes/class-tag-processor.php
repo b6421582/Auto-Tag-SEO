@@ -146,7 +146,7 @@ class AutoTagSEO_Tag_Processor {
 
         $api_handler = auto_tag_seo()->get_api_handler();
 
-        foreach ($tags as $tag) {
+        foreach ($tags as $index => $tag) {
             try {
                 // 调用AI生成描述
                 $description = $api_handler->generate_tag_description($tag->name);
@@ -158,8 +158,8 @@ class AutoTagSEO_Tag_Processor {
                     $results['errors'][] = "标签 '{$tag->name}' 描述生成失败";
                 }
 
-                // 添加延迟避免API限制
-                sleep(1);
+                // 优化延迟策略：减少不必要的等待时间
+                $this->smart_delay($index + 1);
 
             } catch (Exception $e) {
                 $results['failed']++;
@@ -186,7 +186,7 @@ class AutoTagSEO_Tag_Processor {
 
         $api_handler = auto_tag_seo()->get_api_handler();
 
-        foreach ($tags as $tag) {
+        foreach ($tags as $index => $tag) {
             // 只处理没有描述的标签
             if (!empty($tag->description)) {
                 continue;
@@ -203,8 +203,8 @@ class AutoTagSEO_Tag_Processor {
                     $results['errors'][] = "标签 '{$tag->name}' 描述生成失败";
                 }
 
-                // 添加延迟避免API限制
-                sleep(1);
+                // 优化延迟策略：减少不必要的等待时间
+                $this->smart_delay($index + 1);
 
             } catch (Exception $e) {
                 $results['failed']++;
@@ -325,7 +325,7 @@ class AutoTagSEO_Tag_Processor {
         }
 
         $api_handler = auto_tag_seo()->get_api_handler();
-        foreach ($chunk as $term_id) {
+        foreach ($chunk as $index => $term_id) {
             $term = get_term($term_id, 'post_tag');
             if (!$term || is_wp_error($term)) {
                 $job['failed']++;
@@ -340,7 +340,8 @@ class AutoTagSEO_Tag_Processor {
                     $job['failed']++;
                     $job['errors'][] = 'Update failed for term_id ' . $term_id;
                 }
-                sleep(1); // 轻度限速
+                // 优化延迟策略：队列处理中使用智能延迟
+                $this->smart_delay($index + 1);
             } catch (Exception $e) {
                 $job['failed']++;
                 $job['errors'][] = 'Exception for term_id ' . $term_id . ': ' . $e->getMessage();
@@ -373,6 +374,63 @@ class AutoTagSEO_Tag_Processor {
             'done' => count($job['pending']) === 0,
             'errors' => $job['errors'],
         );
+    }
+
+    /**
+     * 强制执行队列任务（不依赖WordPress Cron）
+     */
+    public function force_execute_queue($job_id) {
+        $jobs = get_option($this->job_option_key, array());
+        if (!isset($jobs[$job_id])) {
+            return null;
+        }
+
+        $job = $jobs[$job_id];
+
+        // 如果任务已完成，返回最终状态
+        if (empty($job['pending'])) {
+            return array(
+                'continue' => false,
+                'status' => array(
+                    'total' => (int)$job['total'],
+                    'pending' => 0,
+                    'success' => (int)$job['success'],
+                    'failed' => (int)$job['failed'],
+                    'done' => true,
+                    'errors' => $job['errors'],
+                )
+            );
+        }
+
+        // 执行一个批次
+        $this->process_queue($job_id);
+
+        // 获取更新后的状态
+        $updated_status = $this->get_queue_status($job_id);
+        if ($updated_status === null) {
+            return null;
+        }
+
+        return array(
+            'continue' => !$updated_status['done'],
+            'status' => $updated_status
+        );
+    }
+
+    /**
+     * 智能延迟策略：根据处理数量动态调整延迟时间
+     */
+    private function smart_delay($processed_count) {
+        if ($processed_count <= 3) {
+            // 小批量处理：减少延迟时间
+            usleep(200000); // 0.2秒
+        } elseif ($processed_count % 5 == 0) {
+            // 每处理5个后稍长延迟
+            sleep(1);
+        } else {
+            // 其他情况短延迟
+            usleep(300000); // 0.3秒
+        }
     }
 
     /**

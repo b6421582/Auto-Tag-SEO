@@ -39,40 +39,64 @@
         filter: filter
       }, function(response){
         resultDiv.removeClass('hidden success error');
-        if(response && response.success && response.data && response.data.job_id){
-          var jobId = response.data.job_id;
-          var poll = function(){
-            $.get(autoTagSeoAjax.ajaxurl, {
-              action: 'auto_tag_seo_queue_status',
-              nonce: autoTagSeoAjax.nonce,
-              job_id: jobId
-            }, function(res){
-              if(res && res.success && res.data){
-                var s = res.data;
-                resultDiv.removeClass('hidden error').addClass('success')
-                  .html('批量处理中... 成功: ' + s.success + ' 个，失败: ' + s.failed + ' 个，剩余: ' + s.pending + ' 个 / 总计: ' + s.total + ' 个');
-                if(s.done){
-                  resultDiv.removeClass('error').addClass('success')
-                    .html('批量处理完成！成功: ' + s.success + ' 个，失败: ' + s.failed + ' 个');
-                  setTimeout(function(){ location.reload(); }, 1200);
+        if(response && response.success && response.data){
+          var data = response.data;
+
+          // 检查是否为同步模式（小批量直接处理）
+          if(data.sync_mode === true){
+            // 同步模式：立即显示结果
+            var results = data.results || {success:0,failed:0};
+            resultDiv.addClass('success').html(data.message || ('批量处理完成！成功: ' + results.success + ' 个，失败: ' + results.failed + ' 个'));
+            setTimeout(function(){ location.reload(); }, 1500);
+            btn.prop('disabled', false).text(originalText);
+            return;
+          }
+
+          // 异步模式：队列处理 - 使用强制执行机制
+          if(data.job_id){
+            var jobId = data.job_id;
+            resultDiv.addClass('success').html(data.message || '已创建任务，开始处理...');
+
+            var forceExecute = function(){
+              $.post(autoTagSeoAjax.ajaxurl, {
+                action: 'auto_tag_seo_force_execute',
+                nonce: autoTagSeoAjax.nonce,
+                job_id: jobId
+              }, function(res){
+                if(res && res.success && res.data){
+                  var s = res.data.status;
+                  var progress = Math.round(((s.total - s.pending) / s.total) * 100);
+
+                  resultDiv.removeClass('hidden error').addClass('success')
+                    .html('快速处理中... 进度: ' + progress + '% (' + (s.total - s.pending) + '/' + s.total + ') | 成功: ' + s.success + ' 个，失败: ' + s.failed + ' 个');
+
+                  if(res.data.continue){
+                    // 继续处理下一批，间隔时间更短
+                    setTimeout(forceExecute, 600); // 0.6秒间隔，更快的处理速度
+                  } else {
+                    // 处理完成
+                    resultDiv.removeClass('error').addClass('success')
+                      .html('批量处理完成！成功: ' + s.success + ' 个，失败: ' + s.failed + ' 个 (用时更短，体验更佳)');
+                    setTimeout(function(){ location.reload(); }, 1200);
+                    btn.prop('disabled', false).text(originalText);
+                  }
                 } else {
-                  setTimeout(poll, 2000);
+                  resultDiv.removeClass('hidden success').addClass('error').html('处理失败，请稍后重试');
+                  btn.prop('disabled', false).text(originalText);
                 }
-              } else {
-                resultDiv.removeClass('hidden success').addClass('error').html('查询任务状态失败，请稍后刷新重试');
+              }).fail(function(){
+                resultDiv.removeClass('hidden success').addClass('error').html('网络错误，请稍后重试');
                 btn.prop('disabled', false).text(originalText);
-              }
-            }).fail(function(){
-              resultDiv.removeClass('hidden success').addClass('error').html('状态轮询失败，请稍后刷新重试');
-              btn.prop('disabled', false).text(originalText);
-            });
-          };
-          poll();
-        } else if (response && response.success && response.data) {
-          // 兼容旧返回（立即返回统计）
-          var data = response.data || {success:0,failed:0};
-          resultDiv.addClass('success').html('批量处理完成！成功: ' + data.success + ' 个，失败: ' + data.failed + ' 个');
-          setTimeout(function(){ location.reload(); }, 1500);
+              });
+            };
+            forceExecute();
+          } else {
+            // 兼容旧返回格式
+            var results = data.results || data || {success:0,failed:0};
+            resultDiv.addClass('success').html('批量处理完成！成功: ' + results.success + ' 个，失败: ' + results.failed + ' 个');
+            setTimeout(function(){ location.reload(); }, 1500);
+            btn.prop('disabled', false).text(originalText);
+          }
         } else {
           resultDiv.addClass('error').html('批量处理失败: ' + (response && response.data ? response.data : '未知错误'));
           btn.prop('disabled', false).text(originalText);
